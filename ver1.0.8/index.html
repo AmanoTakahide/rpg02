@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>タマ狩りRPG - MOBILE EDITION</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-mobile-wrapper">
+        
+        <div class="screen-container">
+            <canvas id="gameCanvas" width="480" height="640"></canvas>
+        </div>
+
+        <div class="control-panel">
+            
+            <div class="system-row">
+                <button class="btn-start" id="btn-start">START</button>
+            </div>
+
+            <div class="main-pad-row">
+                
+                <div class="d-pad">
+                    <button class="direction-btn" id="pad-up">▲</button>
+                    <div class="d-pad-row">
+                        <button class="direction-btn" id="pad-left">◀</button>
+                        <div class="d-pad-center"></div>
+                        <button class="direction-btn" id="pad-right">▶</button>
+                    </div>
+                    <button class="direction-btn" id="pad-down">▼</button>
+                </div>
+
+                <div class="action-group">
+                    <button class="action-btn" id="btn-b">B</button>
+                    <button class="action-btn" id="btn-a">A</button>
+                </div>
+
+            </div>
+
+            <div class="hardware-logo">TAMAKARI HANDHELD SYSTEM</div>
+
+        </div>
+
+    </div>
+
+    <script src="config.js"></script>
+    <script src="data.js"></script>
+    <script src="battle.js"></script>
+    <script src="game.js"></script>
+    <script src="input.js"></script>
+
+</body>
+</html>

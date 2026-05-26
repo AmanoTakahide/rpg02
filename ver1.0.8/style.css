@@ -1,0 +1,196 @@
+/* ==========================================
+   1. 全体の基本レイアウト（スマホの画面いっぱいにロック）
+   ========================================== */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #111;
+    overflow: hidden; /* スマホ画面全体の上下スクロールを完全に禁止 */
+}
+
+body {
+    color: white;
+    font-family: 'Courier New', Courier, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none; /* スマホの長押しポップアップを防止 */
+    touch-action: none;        /* スマホのピンチズームやダブルタップズームを無効化 */
+}
+
+/* 📱 スマホ縦画面に100%フィットさせる主筐体 */
+.game-mobile-wrapper {
+    width: 100vw;             /* 画面の横幅いっぱいに広げる */
+    height: 100vh;            /* 画面の縦幅いっぱいに広げる */
+    max-width: 500px;         /* PCで開いたときだけ巨大化しすぎないようにストッパー */
+    display: flex;
+    flex-direction: column;
+    background-color: #000;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* ==========================================
+   2. 画面部分（アスペクト比 3:4 の縦長スクリーンに固定）
+   ========================================== */
+.screen-container {
+    width: 100%;
+    aspect-ratio: 3 / 4;      /* 横3：縦4の綺麗な長方形を常に維持 */
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    border-bottom: 4px solid #333;
+}
+
+/* 実際のゲーム画面となるCanvas（高解像度 480x640 の伸縮表示） */
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    background-color: #050505;
+    box-sizing: border-box;
+    display: block;
+}
+
+/* ==========================================
+   3. 操作パネルエリア（画面下の余りスペースに綺麗に自動フィット）
+   ========================================== */
+.control-panel {
+    flex: 1;                 /* 3:4画面の下に余った縦スペースをすべて吸い上げる */
+    background-color: #161616;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 上下均等に配置 */
+    padding: 6% 5% 8% 5%;    /* スマホの下部セーフエリアを考慮した余白 */
+    box-sizing: border-box;
+}
+
+/* システムボタン行（START） */
+.system-row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-start {
+    width: 28%;              /* パーセントで横幅決定 */
+    height: 38px;
+    background-color: #333;
+    color: #00FF00;
+    border: 2px solid #555;
+    border-radius: 19px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px #111;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 十字キーとABボタンのメイン操作行 */
+.main-pad-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 2%;
+}
+
+/* 🕹️ 十字キー（D-Pad） */
+.d-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40%;             /* 画面左側の領域を確保 */
+}
+
+.d-pad-row {
+    display: flex;
+}
+
+.direction-btn {
+    width: 14vw;            /* スマホの横幅を基準にボタンサイズを決定 */
+    height: 14vw;
+    max-width: 65px;        /* PC時の上限 */
+    max-height: 65px;
+    background-color: #252525;
+    color: #00FF00;
+    border: 2px solid #444;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    -webkit-tap-highlight-color: transparent; /* タップ時の青い影を消す */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#pad-up { border-radius: 8px 8px 0 0; }
+#pad-down { border-radius: 0 0 8px 8px; }
+#pad-left { border-radius: 8px 0 0 8px; }
+#pad-right { border-radius: 0 8px 8px 0; }
+
+.d-pad-center {
+    width: 14vw;
+    height: 14vw;
+    max-width: 65px;
+    max-height: 65px;
+    background-color: #252525;
+    border-top: 2px solid #444;
+    border-bottom: 2px solid #444;
+    box-sizing: border-box;
+}
+
+/* 🔴 A/Bボタン（押しやすい斜め配置） */
+.action-group {
+    display: flex;
+    gap: 15px;
+    transform: rotate(-15deg); /* ゲーム機特有の傾き */
+    width: 50%;
+    justify-content: flex-end;
+    padding-right: 4%;
+}
+
+.action-btn {
+    width: 17vw;            /* 十字キーより一回り大きく押しやすく */
+    height: 17vw;
+    max-width: 80px;
+    max-height: 80px;
+    background-color: #303030;
+    color: #00FF00;
+    border: 3px solid #555;
+    border-radius: 50%;     /* 綺麗な丸ボタン */
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px #111;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* タップした瞬間の沈み込み・反転エフェクト */
+.direction-btn:active, .btn-start:active, .action-btn:active {
+    background-color: #00FF00;
+    color: #000;
+    border-color: #00FF00;
+    transform: translateY(3px);
+    box-shadow: none;
+}
+/* A/Bボタンは傾いているので個別調整 */
+.action-btn:active {
+    transform: rotate(-15deg) translateY(3px);
+}
+
+/* ハードウェアロゴ（最下部） */
+.hardware-logo {
+    text-align: center;
+    color: #333;
+    font-size: 11px;
+    letter-spacing: 3px;
+    margin-top: 2%;
+}
