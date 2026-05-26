@@ -1,6 +1,11 @@
 // ==========================================
-// input.js : 操作処理（「はい・いいえ」選択肢システム完全適合版）
+// input.js : 操作処理（スマホ十字キー長押し連続移動・適合版）
 // ==========================================
+
+// 🔄 長押し連続移動用のタイマー管理変数
+let repeatTimer = null;
+const REPEAT_DELAY = 200;    /* 最初に長押しと判定されるまでの時間(ms) */
+const REPEAT_INTERVAL = 150; /* 押しっぱなしのときの移動速度間隔(ms) */
 
 function move(direction) {
     if (gameMode === "GAMEOVER") return;
@@ -41,28 +46,24 @@ function move(direction) {
         } 
         else if (messageIndex === messageQueue.length - 1) {
             if (direction === 'A') {
-                // 👵 宿屋のばあさんのセリフが最後の一言まで終わった場合
                 if (choiceTargetType === "INN") {
                     messageQueue = [];
                     messageIndex = 0;
-                    gameMode = "CHOICE"; // 👈 ウィンドウを閉じずに選択肢モードへ突入！
-                    choiceIndex = 0;    // 初期位置を「はい」にセット
+                    gameMode = "CHOICE"; 
+                    choiceIndex = 0;    
                     return;
                 }
-
-                // 通常のセリフ（看板や老人など）はそのまま閉じる
                 messageQueue = []; 
                 messageIndex = 0;
-                choiceTargetType = ""; // キーをクリア
+                choiceTargetType = ""; 
                 return;
             }
         }
     }
 
-    // 3. 🎭 【新設：選択肢モード（CHOICE）の操作ルール】
+    // 3. 🎭 【選択肢モード（CHOICE）の操作ルール】
     if (gameMode === "CHOICE") {
         if (direction === 'up' || direction === 'down') {
-            // 上下キーで「はい(0)」と「いいえ(1)」を交互に切り替え
             choiceIndex = (choiceIndex === 0) ? 1 : 0;
             return;
         }
@@ -70,25 +71,22 @@ function move(direction) {
         if (direction === 'A') {
             if (choiceTargetType === "INN") {
                 if (choiceIndex === 0) {
-                    // 🛌 「はい」を選んだ場合の宿屋全回復イベント
                     player.hp = player.maxHp;
                     player.mp = player.maxMp;
                     gameMode = "MAP";
                     messageQueue = ["🛌 👆🏻は 宿屋のベッドで ぐっすり眠った！", "💖 旅のつかれが とれ、HPとMPが完全に回復した！"];
                     messageIndex = 0;
                 } else {
-                    // 🍃 「いいえ」を選んだ場合
                     gameMode = "MAP";
                     messageQueue = ["👵 宿屋のばあさん：「そうかい。無理せんようにな。」"];
                     messageIndex = 0;
                 }
-                choiceTargetType = ""; // イベント終了につきクリア
+                choiceTargetType = ""; 
             }
             return;
         }
 
         if (direction === 'B') {
-            // Bボタンでキャンセルされたら「いいえ」扱いでマップに戻す
             gameMode = "MAP";
             choiceTargetType = "";
             return;
@@ -132,7 +130,7 @@ function move(direction) {
                     return;
                 }
                 
-                // 🛏️ 宿屋のベッド（※ばあさんの許可なしで調べたとき用のセリフに変更）
+                // 🛏️ 宿屋のベッド
                 if (checkedTile === 110) {
                     messageQueue = ["🛏️ ふかふかのベッドだ！", "👵 勝手に入ったら ばあさんに おこられるぞ。"];
                     messageIndex = 0;
@@ -146,17 +144,17 @@ function move(direction) {
                     return;
                 }
 
-                // 👵 【選択肢イベントトリガー】宿屋の主人
+                // 👵 宿屋の主人
                 if (checkedTile === 130) {
                     messageQueue = ["👵 宿屋のばあさん：「旅の人かね。」", "👵 「ここは マクハリ・シティ の宿屋だよ。」", "👵 「一晩 泊まっていくかね？」"];
                     messageIndex = 0;
-                    choiceTargetType = "INN"; // 👈 これを選択肢システムに覚えさせる！
+                    choiceTargetType = "INN"; 
                     return;
                 }
 
                 // 👴 街の老人
                 if (checkedTile === 140) {
-                    messageQueue = ["👴 街のじいさん：「おお、若い旅のエンジニアか。」", "👴 「外にいる『左玉』は 恐ろしくすばしっこい。」", "👴 「森や川の行き止まりに 上手く追い詰めるんじゃぞ！」"];
+                    messageQueue = ["👴 街のじじさん：「おお、若い旅のエンジニアか。」", "👴 「外にいる『左玉』は 恐ろしくすばしっこい。」", "👴 「森や川の行き止まりに 上手く追い詰めるんじゃぞ！」"];
                     messageIndex = 0;
                     return;
                 }
@@ -209,8 +207,7 @@ function move(direction) {
             gameMode = "MAP";
         }
     }
-    else if (gameMode === "BATTLE" || gameMode === "BATTLE_ANIM") {
-        // バトル用のコマンド切り替え
+    else if (gameMode === "BATTLE") {
         if (direction === 'up') {
             if (commandIndex === 2) commandIndex = 0;
             else if (commandIndex === 3) commandIndex = 1;
@@ -245,7 +242,35 @@ function move(direction) {
     }
 }
 
-// キーボード受付
+// 🎛️ 【スマホ専用】長押しタイマーを開始する関数
+function startPress(direction) {
+    // 最初の1歩を実行
+    move(direction);
+
+    // 既にタイマーが動いていたら一回消す
+    if (repeatTimer) clearInterval(repeatTimer);
+
+    // 長押し判定用の遅延タイマーを起動
+    repeatTimer = setTimeout(() => {
+        // 遅延時間を超えたら、150msごとに連続でmoveを実行し続ける
+        repeatTimer = setInterval(() => {
+            move(direction);
+        }, REPEAT_INTERVAL);
+    }, REPEAT_DELAY);
+}
+
+// 🎛️ 【スマホ専用】指が離れたらタイマーを完全に止める関数
+function endPress() {
+    clearTimeout(repeatTimer);
+    clearInterval(repeatTimer);
+    repeatTimer = null;
+}
+
+// ==========================================
+// 🖱️ イベントリスナー設定
+// ==========================================
+
+// ⌨️ PCキーボード受付（元のまま維持）
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'w') move('up');
     if (e.key === 'ArrowDown' || e.key === 's') move('down');
@@ -256,7 +281,28 @@ window.addEventListener('keydown', (e) => {
     if (e.key === ' ' || e.key === 'p') move('START'); 
 });
 
-// バーチャルボタン連動
+// 📱 スマホ十字キー連動（長押し連続移動対応大改造！）
+const directions = ['up', 'down', 'left', 'right'];
+directions.forEach(dir => {
+    const btn = document.getElementById(`pad-${dir}`);
+    
+    // 指が触れた瞬間
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // スマホ特有の余計な挙動（ズーム等）を完全に殺す
+        startPress(dir);
+    });
+
+    // 指が離れた、またはズレて外れた瞬間
+    btn.addEventListener('touchend', endPress);
+    btn.addEventListener('touchcancel', endPress);
+});
+
+// 🎮 アクションボタンは長押し不要なので通常タップ（touchstart）で即反応
+document.getElementById('btn-a').addEventListener('touchstart', (e) => { e.preventDefault(); move('A'); });
+document.getElementById('btn-b').addEventListener('touchstart', (e) => { e.preventDefault(); move('B'); });
+document.getElementById('btn-start').addEventListener('touchstart', (e) => { e.preventDefault(); move('START'); });
+
+// 💻 PCでのマウスデバッグ用クリックイベントも保険で維持
 document.getElementById('pad-up').addEventListener('click', () => move('up'));
 document.getElementById('pad-down').addEventListener('click', () => move('down'));
 document.getElementById('pad-left').addEventListener('click', () => move('left'));
