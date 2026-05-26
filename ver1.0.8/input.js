@@ -1,11 +1,11 @@
 // ==========================================
-// input.js : 操作処理（スマホ十字キー長押し連続移動・適合版）
+// input.js : 操作処理（ポインターイベント採用・確実な長押し連続移動版）
 // ==========================================
 
 // 🔄 長押し連続移動用のタイマー管理変数
-let repeatTimer = null;
-const REPEAT_DELAY = 200;    /* 最初に長押しと判定されるまでの時間(ms) */
-const REPEAT_INTERVAL = 150; /* 押しっぱなしのときの移動速度間隔(ms) */
+let holdDirection = null;
+let holdTimer = null;
+const REPEAT_INTERVAL = 100; // 👈 高速判定（player.isMovingが制御するので早くて安全）
 
 function move(direction) {
     if (gameMode === "GAMEOVER") return;
@@ -154,7 +154,7 @@ function move(direction) {
 
                 // 👴 街の老人
                 if (checkedTile === 140) {
-                    messageQueue = ["👴 街のじじさん：「おお、若い旅のエンジニアか。」", "👴 「外にいる『左玉』は 恐ろしくすばしっこい。」", "👴 「森や川の行き止まりに 上手く追い詰めるんじゃぞ！」"];
+                    messageQueue = ["👴 街のじいさん：「おお、若い旅のエンジニアか。」", "👴 「外にいる『左玉』は 恐ろしくすばしっこい。」", "👴 「森や川の行き止まりに 上手く追い詰めるんじゃぞ！」"];
                     messageIndex = 0;
                     return;
                 }
@@ -242,35 +242,38 @@ function move(direction) {
     }
 }
 
-// 🎛️ 【スマホ専用】長押しタイマーを開始する関数
+// 🎛️ 【新設】ポインター（指・マウス）が押された時の処理
 function startPress(direction) {
-    // 最初の1歩を実行
+    if (holdDirection === direction) return; 
+    holdDirection = direction;
+    
+    // 最初の1回を実行
     move(direction);
 
-    // 既にタイマーが動いていたら一回消す
-    if (repeatTimer) clearInterval(repeatTimer);
+    if (holdTimer) clearInterval(holdTimer);
 
-    // 長押し判定用の遅延タイマーを起動
-    repeatTimer = setTimeout(() => {
-        // 遅延時間を超えたら、150msごとに連続でmoveを実行し続ける
-        repeatTimer = setInterval(() => {
+    // 押しっぱなしの定期実行をスタート
+    holdTimer = setInterval(() => {
+        if (holdDirection === direction) {
             move(direction);
-        }, REPEAT_INTERVAL);
-    }, REPEAT_DELAY);
+        }
+    }, REPEAT_INTERVAL);
 }
 
-// 🎛️ 【スマホ専用】指が離れたらタイマーを完全に止める関数
+// 🎛️ ポインター（指・マウス）が離れた、またはズレた時の処理
 function endPress() {
-    clearTimeout(repeatTimer);
-    clearInterval(repeatTimer);
-    repeatTimer = null;
+    holdDirection = null;
+    if (holdTimer) {
+        clearInterval(holdTimer);
+        holdTimer = null;
+    }
 }
 
 // ==========================================
 // 🖱️ イベントリスナー設定
 // ==========================================
 
-// ⌨️ PCキーボード受付（元のまま維持）
+// ⌨️ PCキーボード受付
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'w') move('up');
     if (e.key === 'ArrowDown' || e.key === 's') move('down');
@@ -281,32 +284,29 @@ window.addEventListener('keydown', (e) => {
     if (e.key === ' ' || e.key === 'p') move('START'); 
 });
 
-// 📱 スマホ十字キー連動（長押し連続移動対応大改造！）
+// 📱 & 💻 スマホタッチ ＋ PCマウス 共通の最強イベント「pointer」！
 const directions = ['up', 'down', 'left', 'right'];
 directions.forEach(dir => {
     const btn = document.getElementById(`pad-${dir}`);
     
-    // 指が触れた瞬間
-    btn.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // スマホ特有の余計な挙動（ズーム等）を完全に殺す
+    // 押した瞬間
+    btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); 
         startPress(dir);
     });
 
-    // 指が離れた、またはズレて外れた瞬間
-    btn.addEventListener('touchend', endPress);
-    btn.addEventListener('touchcancel', endPress);
+    // 離した瞬間、または指がボタンの外に滑って出た瞬間
+    btn.addEventListener('pointerup', (e) => { e.preventDefault(); endPress(); });
+    btn.addEventListener('pointerleave', (e) => { e.preventDefault(); endPress(); });
+    btn.addEventListener('pointercancel', (e) => { e.preventDefault(); endPress(); });
 });
 
-// 🎮 アクションボタンは長押し不要なので通常タップ（touchstart）で即反応
-document.getElementById('btn-a').addEventListener('touchstart', (e) => { e.preventDefault(); move('A'); });
-document.getElementById('btn-b').addEventListener('touchstart', (e) => { e.preventDefault(); move('B'); });
-document.getElementById('btn-start').addEventListener('touchstart', (e) => { e.preventDefault(); move('START'); });
-
-// 💻 PCでのマウスデバッグ用クリックイベントも保険で維持
-document.getElementById('pad-up').addEventListener('click', () => move('up'));
-document.getElementById('pad-down').addEventListener('click', () => move('down'));
-document.getElementById('pad-left').addEventListener('click', () => move('left'));
-document.getElementById('pad-right').addEventListener('click', () => move('right'));
-document.getElementById('btn-a').addEventListener('click', () => move('A'));
-document.getElementById('btn-b').addEventListener('click', () => move('B'));
-document.getElementById('btn-start').addEventListener('click', () => move('START'));
+// 🎮 アクションボタンは長押し不要なので、単発の pointerdown のみ
+const actionButtons = { 'A': 'btn-a', 'B': 'btn-b', 'START': 'btn-start' };
+for (const [key, id] of Object.entries(actionButtons)) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        move(key);
+    });
+}
