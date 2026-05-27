@@ -1,0 +1,337 @@
+いいね、仕様かなり固まってる。
+しかも「初代ポケモン赤緑青をそのままWebで再現する」方向だから、実装も整理しやすい。 
+
+おすすめは、
+
+```txt
+まず「スタートメニュー」だけを
+完全に独立した状態機械(State)として作る
+```
+
+こと。
+
+---
+
+# まず結論
+
+今のゲーム状態：
+
+```js
+MAP
+MESSAGE
+CHOICE
+```
+
+に追加で：
+
+```js
+MENU
+MENU_PARTY
+MENU_BAG
+MENU_STATUS
+```
+
+を作るのがおすすめ。
+
+---
+
+# 初代ポケモン風の構成
+
+仕様書ベースだとこんな感じ。 
+
+```txt
+▶ てもち
+  バッグ
+  タカヒデ
+  レポート
+  せってい
+  とじる
+```
+
+初代っぽくするなら最初は：
+
+```txt
+てもち
+バッグ
+タカヒデ
+レポート
+とじる
+```
+
+だけで十分。
+
+---
+
+# 超重要：状態管理を整理する
+
+今のコード、たぶん全部：
+
+```js
+if (gameState === "CHOICE")
+```
+
+みたいなif地獄になり始めてる。
+
+ここで整理しないと後半で死ぬ。
+
+---
+
+# おすすめ設計
+
+## ① gameState を増やす
+
+```js
+const GAME_STATE = {
+    MAP: "MAP",
+    MESSAGE: "MESSAGE",
+    CHOICE: "CHOICE",
+
+    MENU: "MENU",
+    MENU_PARTY: "MENU_PARTY",
+    MENU_BAG: "MENU_BAG",
+    MENU_STATUS: "MENU_STATUS"
+};
+```
+
+で：
+
+```js
+let gameState = GAME_STATE.MAP;
+```
+
+にする。
+
+これ超大事。
+
+---
+
+# ② スタートメニュー専用変数
+
+```js
+const START_MENU_ITEMS = [
+    "てもち",
+    "バッグ",
+    "タカヒデ",
+    "レポート",
+    "とじる"
+];
+
+let menuIndex = 0;
+```
+
+---
+
+# ③ STARTボタンでメニュー開く
+
+handleInput に追加。
+
+```js
+if (command === "START") {
+    if (gameState === GAME_STATE.MAP) {
+        gameState = GAME_STATE.MENU;
+        menuIndex = 0;
+    }
+    return;
+}
+```
+
+---
+
+# ④ MENU操作
+
+```js
+if (gameState === GAME_STATE.MENU) {
+
+    if (command === "UP") {
+        menuIndex =
+            (menuIndex - 1 + START_MENU_ITEMS.length)
+            % START_MENU_ITEMS.length;
+    }
+
+    else if (command === "DOWN") {
+        menuIndex =
+            (menuIndex + 1)
+            % START_MENU_ITEMS.length;
+    }
+
+    else if (command === "B") {
+        gameState = GAME_STATE.MAP;
+    }
+
+    else if (command === "A") {
+
+        const selected =
+            START_MENU_ITEMS[menuIndex];
+
+        if (selected === "てもち") {
+            gameState = GAME_STATE.MENU_PARTY;
+        }
+
+        else if (selected === "バッグ") {
+            gameState = GAME_STATE.MENU_BAG;
+        }
+
+        else if (selected === "タカヒデ") {
+            gameState = GAME_STATE.MENU_STATUS;
+        }
+
+        else if (selected === "とじる") {
+            gameState = GAME_STATE.MAP;
+        }
+    }
+
+    return;
+}
+```
+
+---
+
+# ⑤ 描画
+
+render に追加。
+
+```js
+if (gameState === GAME_STATE.MENU) {
+    drawStartMenu();
+}
+```
+
+---
+
+# ⑥ drawStartMenu()
+
+これが本体。
+
+```js
+function drawStartMenu() {
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(350, 20, 120, 180);
+
+    ctx.strokeStyle = "black";
+    ctx.strokeRect(350, 20, 120, 180);
+
+    ctx.fillStyle = "black";
+    ctx.font = "16px sans-serif";
+
+    START_MENU_ITEMS.forEach((item, index) => {
+
+        const y = 50 + index * 30;
+
+        if (index === menuIndex) {
+            ctx.fillText("▶", 360, y);
+        }
+
+        ctx.fillText(item, 390, y);
+    });
+}
+```
+
+---
+
+# 次に実装すべきもの
+
+順番かなり重要。
+
+---
+
+# 実装優先順位
+
+## 第1段階（今日）
+
+* STARTメニュー
+* カーソル移動
+* 開閉
+* てもち画面遷移
+
+ここまで。
+
+---
+
+## 第2段階
+
+てもち画面。
+
+```txt
+🐭 タマウス Lv5
+🍑 アナルー Lv5
+```
+
+みたいな一覧。
+
+---
+
+## 第3段階
+
+バッグ。
+
+仕様的には：
+
+```txt
+タマ ×5
+金パブ ×2
+ストゼロ ×1
+```
+
+のシンプルスクロールでOK。 
+
+しかも仕様では：
+
+```txt
+初代赤緑青準拠
+ポケット分割なし
+```
+
+なので実装かなり楽。 
+
+---
+
+# 今のうちに絶対やるべき改善
+
+これ超重要。
+
+---
+
+# 「状態ごとの入力関数」に分離しろ
+
+今：
+
+```js
+handleInput()
+```
+
+に全部詰め込んでると思う。
+
+これ100%破綻する。
+
+---
+
+# おすすめ
+
+```js
+function handleInput(command) {
+
+    switch(gameState) {
+
+        case GAME_STATE.MAP:
+            handleMapInput(command);
+            break;
+
+        case GAME_STATE.MESSAGE:
+            handleMessageInput(command);
+            break;
+
+        case GAME_STATE.MENU:
+            handleMenuInput(command);
+            break;
+
+        case GAME_STATE.MENU_PARTY:
+            handlePartyInput(command);
+            break;
+    }
+}
+```
+
+これに早めに変えたほうがいい。
+
+ポケモン系UIは状態爆増するから。

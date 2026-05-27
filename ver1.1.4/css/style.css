@@ -1,0 +1,344 @@
+html,
+body {
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    background-color: #111;
+
+}
+
+body {
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    touch-action: none;
+
+}
+
+.game-mobile-wrapper {
+
+    width: 100vw;
+    height: 100vh;
+
+    max-width: 520px;
+
+    display: flex;
+    flex-direction: column;
+
+    background-color: #d8d8d8;
+
+    overflow: hidden;
+
+}
+
+
+/* ===================================== */
+/* SCREEN */
+/* ===================================== */
+
+.screen-container {
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    background-color: black;
+
+    position: relative;
+
+    overflow: hidden;
+
+    border-bottom: 4px solid #333;
+
+}
+
+#gameCanvas {
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    background-color: #000;
+
+    image-rendering: pixelated;
+
+}
+
+
+/* ===================================== */
+/* MESSAGE */
+/* ===================================== */
+
+#message-box {
+
+    position: absolute;
+
+    left: 2%;
+    bottom: 2%;
+
+    width: 96%;
+    height: 22%;
+
+    background: white;
+
+    color: black;
+
+    border: 4px solid #333;
+
+    box-sizing: border-box;
+
+    padding: 14px;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    line-height: 1.5;
+
+    display: none;
+
+    z-index: 100;
+
+}
+
+
+/* ===================================== */
+/* CONTROL */
+/* ===================================== */
+
+.control-panel {
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    background-color: #d8d8d8;
+
+    padding:
+        4%
+        5%
+        6%
+        5%;
+
+    box-sizing: border-box;
+
+}
+
+.main-pad-row {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+
+/* ===================================== */
+/* D-PAD */
+/* ===================================== */
+
+.d-pad {
+
+    width: 38%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.d-pad-row {
+
+    display: flex;
+
+}
+
+.direction-btn {
+
+    width: 13vw;
+    height: 13vw;
+
+    max-width: 64px;
+    max-height: 64px;
+
+    background-color: #333;
+
+    color: white;
+
+    border: 2px solid #555;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+}
+
+.d-pad-center {
+
+    width: 13vw;
+    height: 13vw;
+
+    max-width: 64px;
+    max-height: 64px;
+
+    background-color: #333;
+
+}
+
+#pad-up {
+
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+
+}
+
+#pad-down {
+
+    border-radius: 0 0 8px 8px;
+    border-top: none;
+
+}
+
+#pad-left {
+
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+
+}
+
+#pad-right {
+
+    border-radius: 0 8px 8px 0;
+    border-left: none;
+
+}
+
+
+/* ===================================== */
+/* SYS BUTTON */
+/* ===================================== */
+
+.sys-btn-container {
+
+    width: 28%;
+
+    display: flex;
+
+    justify-content: space-around;
+    align-items: center;
+
+    transform: rotate(-10deg);
+
+}
+
+.btn-sys {
+
+    width: 45%;
+    height: 28px;
+
+    background-color: #333;
+
+    color: white;
+
+    border: 2px solid #555;
+
+    border-radius: 12px;
+
+    font-size: 10px;
+    font-weight: bold;
+
+}
+
+
+/* ===================================== */
+/* ACTION BUTTON */
+/* ===================================== */
+
+.action-group {
+
+    width: 34%;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    transform: rotate(-15deg);
+
+}
+
+.action-btn {
+
+    width: 16vw;
+    height: 16vw;
+
+    max-width: 80px;
+    max-height: 80px;
+
+    border-radius: 50%;
+
+    background-color: #aa0000;
+
+    color: white;
+
+    border: 3px solid #555;
+
+    font-size: 24px;
+    font-weight: bold;
+
+}
+
+.direction-btn:active,
+.btn-sys:active,
+.action-btn:active {
+
+    transform: translateY(3px);
+
+}
+
+
+/* ===================================== */
+/* LOGO */
+/* ===================================== */
+
+.hardware-logo {
+
+    margin-top: 5%;
+
+    color: #333;
+
+    font-size: 10px;
+
+    letter-spacing: 2px;
+
+    font-weight: bold;
+
+}

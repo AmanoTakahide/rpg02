@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>KUSOOSU RPG</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <div class="game-mobile-wrapper">
+
+        <div class="screen-container">
+            <canvas id="gameCanvas" width="720" height="720"></canvas>
+            <div id="message-box" onclick="handleInput('A')"></div>
+        </div>
+
+        <div class="control-panel">
+            <div class="main-pad-row">
+
+                <div class="d-pad">
+                    <button class="direction-btn" id="pad-up">▲</button>
+                    <div class="d-pad-row">
+                        <button class="direction-btn" id="pad-left">◀</button>
+                        <div class="d-pad-center"></div>
+                        <button class="direction-btn" id="pad-right">▶</button>
+                    </div>
+                    <button class="direction-btn" id="pad-down">▼</button>
+                </div>
+
+                <div class="sys-btn-container">
+                    <button class="btn-sys" id="btn-select">SELECT</button>
+                    <button class="btn-sys" id="btn-start">START</button>
+                </div>
+
+                <div class="action-group">
+                    <button class="action-btn" id="btn-b">B</button>
+                    <button class="action-btn" id="btn-a">A</button>
+                </div>
+
+            </div>
+
+            <div class="hardware-logo">
+                KUSOOSU HANDHELD SYSTEM
+            </div>
+        </div>
+
+    </div>
+<script src="js/state.js"></script>
+    <script src="js/move.js"></script>
+    <script src="js/monster.js"></script> <script src="js/data.js"></script>
+    <script src="js/text.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/message.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/choice.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/input.js"></script>
+
+    <script>
+        function bindButton(id, command) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener("touchstart", (e) => { e.preventDefault(); handleInput(command); });
+            btn.addEventListener("mousedown", (e) => { e.preventDefault(); handleInput(command); });
+        }
+
+        bindButton("pad-up", "UP");
+        bindButton("pad-down", "DOWN");
+        bindButton("pad-left", "LEFT");
+        bindButton("pad-right", "RIGHT");
+        bindButton("btn-a", "A");
+        bindButton("btn-b", "B");
+        bindButton("btn-start", "START");
+        bindButton("btn-select", "SELECT");
+    </script>
+</body>
+
+</html>
